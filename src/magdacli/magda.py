@@ -11,8 +11,8 @@ Magda client, build ontop of the generic APIClient
 '''
 
 
-from magdacli.rest import ApiClient
-from magdacli.configuration import Configuration
+from pyrest.rest import ApiClient
+from pyrest.configuration import Configuration
 
 import json
 
