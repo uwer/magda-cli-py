@@ -20,9 +20,7 @@ $ client = AspectMagdaClient({"api-key":"<API-KEY>,"api-key-id":"<API-KEY-ID>","
 Dependencies
 ============
 
-* six
-* certifi
-* mimetypes
+* restpy
 
 License
 =======
