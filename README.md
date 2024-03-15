@@ -26,5 +26,5 @@ License
 =======
 
 Short version: [MIT](https://en.wikipedia.org/wiki/MIT_License)
-Long version: see [LICENSE.txt](LICENSE.txt) file
+Long version: see [LICENSE](LICENSE) file
 	 

@@ -1,4 +1,4 @@
 six
 certifi
 mimetypes
-pyrest git+https://github.com/uwer/pyrest#egg=pyrest
+pyrest @ git+https://github.com/uwer/pyrest#egg=pyrest

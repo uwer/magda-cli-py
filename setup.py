@@ -4,6 +4,7 @@ from setuptools import setup, find_packages
 setup(
     name='magdacli',
     package_dir = {"": "src"},
+    python_requires=">=3.8",
     version = '0.9',
     url='https://github.com/uwer/magda-cli-py',
     author='UR',

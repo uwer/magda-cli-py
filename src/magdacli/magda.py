@@ -32,6 +32,12 @@ class AspectMagdaClient(ApiClient):
     
     @staticmethod 
     def getInstance(apiprops):
+        '''
+         parameter - apiprops, dict with mandatory keys "api-key","api-key-id","url" 
+                        for authentication "api-key","api-key-id"
+                        the rest base URL without path "url" 
+    
+        '''
         if AspectMagdaClient.__instance == None:
             ## this is crude and this wants to come from a better place then an function argument 
             AspectMagdaClient.__instance = AspectMagdaClient(apiprops["api-key"],apiprops["api-key-id"],apiprops["url"])
@@ -208,6 +214,12 @@ class ManagementMagdaClient(ApiClient):
     
     @staticmethod 
     def getInstance(apiprops):
+        '''
+         parameter - apiprops, dict with mandatory keys "api-key","api-key-id","url" 
+                        for authentication "api-key","api-key-id"
+                        the rest base URL without path "url" 
+    
+        '''
         if ManagementMagdaClient.__instance == None:
             ## this is crude and this wants to come from a better place then an function argument 
             ManagementMagdaClient.__instance = ManagementMagdaClient(apiprops["api-key"],apiprops["api-key-id"],apiprops["url"])
@@ -335,10 +347,25 @@ def encodeKey(context,key):
    
     
 def createRegistryClient(apiprops):
+    '''
+    This call creates a singelton, so its ok to call repeatedly
+    It supports multiple parallel requests 
+    parameter - apiprops, dict with mandatory keys "api-key","api-key-id","url" 
+                        for authentication "api-key","api-key-id"
+                        the rest base URL without path "url"
+    '''
     return AspectMagdaClient.getInstance(apiprops)
 
 
 def createManagmentClient(apiprops):
+    '''
+    This call creates a singelton, so its ok to call repeatedly
+    It supports multiple parallel requests 
+    parameter - apiprops, dict with mandatory keys "api-key","api-key-id","url" 
+                        for authentication "api-key","api-key-id"
+                        the rest base URL without path "url" 
+    
+    '''
     return ManagementMagdaClient.getInstance(apiprops)
 
     
