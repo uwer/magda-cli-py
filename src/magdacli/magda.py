@@ -75,11 +75,12 @@ class AspectMagdaClient(ApiClient):
                  _return_http_data_only=False, collection_formats=None,
                  _preload_content=True, _request_timeout=None, _raise_error= False):
         
+        auth_settings=self.configuration.auth_settings_map.keys() if auth_settings is None else auth_settings
         
         result = super().call_api(resource_path, method, 
                                   path_params, query_params, header_params, 
                                   body, post_params, files, response_type, 
-                                  auth_settings=self.configuration.auth_settings_map.keys() if auth_settings is None else auth_settings, 
+                                  auth_settings, 
                                   async_req, False, collection_formats, 
                                   _preload_content, _request_timeout, _raise_error)
         # if _raise_error is true this will be ignored
@@ -252,11 +253,12 @@ class ManagementMagdaClient(ApiClient):
                  _return_http_data_only=False, collection_formats=None,
                  _preload_content=True, _request_timeout=None, _raise_error= True):
         
-        
+        auth_settings=self.configuration.auth_settings_map.keys() if auth_settings is None else auth_settings
+
         result = super().call_api(resource_path, method, 
                                   path_params, query_params, header_params, 
                                   body, post_params, files, response_type, 
-                                  auth_settings=self.configuration.auth_settings_map.keys() if auth_settings is None else auth_settings, 
+                                  auth_settings, 
                                   async_req, False, collection_formats, 
                                   _preload_content, _request_timeout, _raise_error)
         
