@@ -72,7 +72,7 @@ class AspectMagdaClient(ApiClient):
                  path_params=None, query_params=None, header_params=None,
                  body=None, post_params=None, files=None,
                  response_type=object, auth_settings=None, async_req=None,
-                 _return_http_data_only=False, collection_formats=None,
+                 _return_http_data_only=True, collection_formats=None,
                  _preload_content=True, _request_timeout=None, _raise_error= False):
         
         auth_settings=self.configuration.auth_settings_map.keys() if auth_settings is None else auth_settings
@@ -84,8 +84,11 @@ class AspectMagdaClient(ApiClient):
                                   async_req, False, collection_formats, 
                                   _preload_content, _request_timeout, _raise_error)
         # if _raise_error is true this will be ignored
-        if not 200 <= result[1] < 299:
+        # _return_http_data_only is ignored for downstream but used here to identify if we want errors returned
+        if not self.replyOK( result[1] ):
             print(result[0])
+            if not _return_http_data_only:
+                return result
             return None
         return  result[0]
         
@@ -333,15 +336,28 @@ class ManagementMagdaClient(ApiClient):
 def encodeKey(context,key):
     cnxt = context.lower()
     if cnxt == 'entity':
+        if key.startswith('org-'):
+            return key
         return f"org-{key}"
     
     if cnxt == 'resource':
+        if key.startswith('ds-'):
+            return key
         return f"ds-{key}"
     
     if cnxt == 'dataset':
+        if key.startswith('ds-'):
+            return key
         return f"ds-{key}"
     
+    if 'distr' in cnxt :
+        if key.startswith('dist-'):
+            return key
+        return f"dist-{key}"
+    
     if cnxt == 'method':
+        if key.startswith('methd-'):
+            return key
         return f"methd-{key}"
 
     
