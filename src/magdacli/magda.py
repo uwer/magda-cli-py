@@ -186,7 +186,7 @@ class AspectMagdaClient(ApiClient):
             while res["hasMore"]:
                 for rec in res["records"]:
                     if org == rec["name"].lower():
-                        print(json.dumps(rec))
+                        #print(json.dumps(rec))
                         return rec
                 res = self.recordGetSummaries(query_params={"pageToken":res["nextPageToken"]})
             
@@ -195,7 +195,7 @@ class AspectMagdaClient(ApiClient):
             while res["hasMore"]:
                 for rec in res["records"]:
                     if org in rec["name"].lower().replace(" ", ""):
-                        print(json.dumps(rec))
+                        #print(json.dumps(rec))
                         return rec
                 res = self.recordGetSummaries(pageToken=res["nextPageToken"])
                 
