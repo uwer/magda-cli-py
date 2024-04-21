@@ -171,8 +171,8 @@ class AspectMagdaClient(ApiClient):
         self.call_api(f"registry/records/{recordId}",self.PUT,body=recordsData,**kwargs)
         
         
-    def recordDelete(self,recordId,recordsData,**kwargs):        
-        self.call_api(f"registry/records/{recordId}",self.DELETE,body=recordsData,**kwargs)
+    def recordDelete(self,recordId,**kwargs):        
+        self.call_api(f"registry/records/{recordId}",self.DELETE,**kwargs)
         
         
     def testAuth(self,**kwargs):
