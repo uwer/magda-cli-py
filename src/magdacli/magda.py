@@ -398,6 +398,12 @@ def createRegistryClient(apiprops):
     parameter - apiprops, dict with mandatory keys "api-key","api-key-id","url" 
                         for authentication "api-key","api-key-id"
                         the rest base URL without path "url"
+                        
+        or for internal connections 
+                dict with mandatory keys "jwt-key","user-id","url" 
+                        for authentication "jwt-key","user-id"
+                        the rest base URL without path "url"
+         
     '''
     return AspectMagdaClient.getInstance(apiprops)
 

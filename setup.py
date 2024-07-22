@@ -9,7 +9,8 @@ setup(
     url='https://github.com/uwer/magda-cli-py',
     author='UR',
     author_email='ur@gmail.com',
-    install_requires=[
+    install_requires=[ 
+        "pyjwt",
         "pyrest @ git+https://github.com/uwer/pyrest.git#egg=pyrest",
     ],
     
