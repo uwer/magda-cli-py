@@ -1,4 +1,5 @@
 six
 certifi
 mimetypes
+pyjwt
 pyrest @ git+https://github.com/uwer/pyrest#egg=pyrest

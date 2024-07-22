@@ -14,7 +14,8 @@ Magda client, build ontop of the generic APIClient
 from pyrest.rest import ApiClient
 from pyrest.configuration import Configuration
 
-import json
+import json, jwt
+from urllib.parse import urlparse
 
 class AspectMagdaClient(ApiClient):
     '''
@@ -23,9 +24,11 @@ class AspectMagdaClient(ApiClient):
     Utilises simple REST API
     '''
     
-    api_prefix = "/api/v0/"
+    api_prefix = "api/v0"
+    internal_prefix = "v0"
     api_auth_key_name = "X-Magda-API-Key"
     api_auth_id_name = "X-Magda-API-Key-Id"
+    api_jwt_id = "X-Magda-Session"
     
     
     __instance = None
@@ -40,7 +43,11 @@ class AspectMagdaClient(ApiClient):
         '''
         if AspectMagdaClient.__instance == None:
             ## this is crude and this wants to come from a better place then an function argument 
-            AspectMagdaClient.__instance = AspectMagdaClient(apiprops["api-key"],apiprops["api-key-id"],apiprops["url"])
+            if "jwt-token" in apiprops:
+                AspectMagdaClient.__instance = AspectMagdaClient(apiprops["jwt-token"],apiprops.get("user-id","00000000-0000-4000-8000-000000000000"),apiprops["url"], True)
+            else:
+                AspectMagdaClient.__instance = AspectMagdaClient(apiprops["api-key"],apiprops["api-key-id"],apiprops["url"])
+            
         
         
         return AspectMagdaClient.__instance
@@ -48,14 +55,26 @@ class AspectMagdaClient(ApiClient):
         
     
     # or Bearer [API Key ID]:[API key]
-    def __init__(self,authtoken, authid, url):
+    def __init__(self,authtoken, authid, url, asjwt = False):
         
-        self._baseUrl = "{}{}".format(url,AspectMagdaClient.api_prefix)
+        purl = urlparse(url)
+        
         self.configuration = Configuration()
-        self.configuration.auth_settings_map[AspectMagdaClient.api_auth_id_name] = {'in':"header","key":AspectMagdaClient.api_auth_id_name,"value":authid}
-        self.configuration.auth_settings_map[AspectMagdaClient.api_auth_key_name] = {'in':"header","key":AspectMagdaClient.api_auth_key_name,"value":authtoken}
-        #configuration.api_key["X-Magda-API-Key-Id"] = authid
-        #configuration.api_key["X-Magda-API-Key"] = authtoken
+        if asjwt:
+            api_prefix =AspectMagdaClient.internal_prefix
+            self.configuration.auth_settings_map[AspectMagdaClient.api_auth_id_name] = {'in':"header","key":AspectMagdaClient.api_jwt_id,
+                                                                                        "value":self._createToken(authid,authtoken)}
+        
+        else:
+            api_prefix = AspectMagdaClient.api_prefix
+            self.configuration.auth_settings_map[AspectMagdaClient.api_auth_id_name] = {'in':"header","key":AspectMagdaClient.api_auth_id_name,
+                                                                                        "value":authid}
+            self.configuration.auth_settings_map[AspectMagdaClient.api_auth_key_name] = {'in':"header","key":AspectMagdaClient.api_auth_key_name,
+                                                                                         "value":authtoken}
+        
+            
+        self._baseUrl = "{}://{}:{}/{}/".format(purl.scheme,purl.netloc,purl.port if not purl.port is None else 80,api_prefix)
+        
         self.configuration.host = self._baseUrl
         self.configuration.verify_ssl = False
         #'content-type': 'application/json; charset=utf-8'
@@ -65,8 +84,6 @@ class AspectMagdaClient(ApiClient):
         --header 'Content-Type: application/json' \
         '''
         
-        
-        self.session_key = None
         
     def call_api(self, resource_path, method,
                  path_params=None, query_params=None, header_params=None,
@@ -91,6 +108,9 @@ class AspectMagdaClient(ApiClient):
                 return result
             return None
         return  result[0]
+        
+    def _createToken(self,user, token):
+        return jwt.encode(payload={"userId": user},key=token)
         
     
     def aspectCreate(self,aspectDict,**kwargs):        
@@ -132,6 +152,9 @@ class AspectMagdaClient(ApiClient):
 
     def recordAspectGetAll(self,recordId,**kwargs):        
         return self.call_api(f"registry/records/{recordId}/aspects",self.GET,**kwargs)  
+    
+    def recordAspectGetByAspect(self,aspectlist,**kwargs):        
+        return self.call_api(f"registry/records",self.GET,query_params={"aspect":aspectlist},**kwargs)  
         
     def recordAspectGetCount(self,recordId,**kwargs):        
         return self.call_api(f"registry/records/{recordId}/aspects/count",self.GET,**kwargs)        
