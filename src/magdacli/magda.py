@@ -14,7 +14,7 @@ Magda client, build ontop of the generic APIClient
 from pyrest.rest import ApiClient
 from pyrest.configuration import Configuration
 
-import json, jwt
+import os, jwt
 from urllib.parse import urlparse
 
 class AspectMagdaClient(ApiClient):
@@ -44,9 +44,9 @@ class AspectMagdaClient(ApiClient):
         if AspectMagdaClient.__instance == None:
             ## this is crude and this wants to come from a better place then an function argument 
             if "jwt-token" in apiprops:
-                AspectMagdaClient.__instance = AspectMagdaClient(apiprops["jwt-token"],apiprops.get("user-id","00000000-0000-4000-8000-000000000000"),apiprops["url"], True)
+                AspectMagdaClient.__instance = AspectMagdaClient(os.path.expandvars(apiprops["jwt-token"]),os.path.expandvars(apiprops.get("user-id","00000000-0000-4000-8000-000000000000")),apiprops["url"], True)
             else:
-                AspectMagdaClient.__instance = AspectMagdaClient(apiprops["api-key"],apiprops["api-key-id"],apiprops["url"])
+                AspectMagdaClient.__instance = AspectMagdaClient(os.path.expandvars(apiprops["api-key"]),os.path.expandvars(apiprops["api-key-id"]),apiprops["url"])
             
         
         
