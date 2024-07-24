@@ -24,11 +24,12 @@ class AspectMagdaClient(ApiClient):
     Utilises simple REST API
     '''
     
-    api_prefix = "api/v0"
+    api_prefix = "api/v0/registry"
     internal_prefix = "v0"
     api_auth_key_name = "X-Magda-API-Key"
     api_auth_id_name = "X-Magda-API-Key-Id"
     api_jwt_id = "X-Magda-Session"
+    api_tenant_id = "X-Magda-Tenant-Id"
     
     
     __instance = None
@@ -44,7 +45,12 @@ class AspectMagdaClient(ApiClient):
         if AspectMagdaClient.__instance == None:
             ## this is crude and this wants to come from a better place then an function argument 
             if "jwt-token" in apiprops:
-                AspectMagdaClient.__instance = AspectMagdaClient(os.path.expandvars(apiprops["jwt-token"]),os.path.expandvars(apiprops.get("user-id","00000000-0000-4000-8000-000000000000")),apiprops["url"], True)
+                AspectMagdaClient.__instance = AspectMagdaClient(os.path.expandvars(apiprops["jwt-token"]),
+                                                                 os.path.expandvars(apiprops.get("user-id","00000000-0000-4000-8000-000000000000")),
+                                                                 tenantId = apiprops.get("tenant-id",'0'),
+                                                                 apiprops["url"],asjwt= True)
+                
+                
             else:
                 AspectMagdaClient.__instance = AspectMagdaClient(os.path.expandvars(apiprops["api-key"]),os.path.expandvars(apiprops["api-key-id"]),apiprops["url"])
             
@@ -55,17 +61,21 @@ class AspectMagdaClient(ApiClient):
         
     
     # or Bearer [API Key ID]:[API key]
-    def __init__(self,authtoken, authid, url, asjwt = False):
+    def __init__(self,authtoken, authid, url, tenantId = '0', asjwt = False):
         
         purl = urlparse(url)
         
         self.configuration = Configuration()
         if asjwt:
+            self.__internal = True
             api_prefix = AspectMagdaClient.internal_prefix
             self.configuration.auth_settings_map[AspectMagdaClient.api_jwt_id] = {'in':"header","key":AspectMagdaClient.api_jwt_id,
                                                                                         "value":self._createToken(authid,authtoken)}
+            self.configuration.auth_settings_map[AspectMagdaClient.api_tenant_id] = {'in':"header","key":AspectMagdaClient.api_tenant_id,
+                                                                                         "value":tenantId}
         
         else:
+            self.__internal = False
             api_prefix = AspectMagdaClient.api_prefix
             self.configuration.auth_settings_map[AspectMagdaClient.api_auth_id_name] = {'in':"header","key":AspectMagdaClient.api_auth_id_name,
                                                                                         "value":authid}
@@ -114,71 +124,71 @@ class AspectMagdaClient(ApiClient):
         
     
     def aspectCreate(self,aspectDict,**kwargs):        
-        return self.call_api("registry/aspects",self.POST, body=aspectDict,**kwargs)
+        return self.call_api("aspects",self.POST, body=aspectDict,**kwargs)
         
     def aspectGetAll(self,**kwargs):        
-        return self.call_api("registry/aspects",self.GET,**kwargs)
+        return self.call_api("aspects",self.GET,**kwargs)
         
         
     def aspectGet(self,aspectID,**kwargs):        
-        return self.call_api(f"registry/aspects/{aspectID}",self.GET,**kwargs)
+        return self.call_api(f"aspects/{aspectID}",self.GET,**kwargs)
         
     def aspectEdit(self,aspectID,aspectDict,**kwargs):        
-        return self.call_api(f"registry/aspects/{aspectID}",self.PUT, body=aspectDict,**kwargs)
+        return self.call_api(f"aspects/{aspectID}",self.PUT, body=aspectDict,**kwargs)
         
         
     def aspectPatch(self,aspectID,aspectDict,**kwargs):        
-        return self.call_api(f"registry/aspects/{aspectID}",self.PATCH, body=aspectDict,**kwargs)
+        return self.call_api(f"aspects/{aspectID}",self.PATCH, body=aspectDict,**kwargs)
         
         
     def recordAspectDelete(self,recordId,aspectID,**kwargs):        
-        return self.call_api(f"registry/records/{recordId}/aspects/{aspectID}",self.DELETE,**kwargs)
+        return self.call_api(f"records/{recordId}/aspects/{aspectID}",self.DELETE,**kwargs)
         
     def recordAspectGet(self,recordId,aspectID,**kwargs):        
-        return self.call_api(f"registry/records/{recordId}/aspects/{aspectID}",self.GET,**kwargs)
+        return self.call_api(f"records/{recordId}/aspects/{aspectID}",self.GET,**kwargs)
         
     def recordAspectPATCH(self,recordId,aspectID,aspectDataDict,**kwargs):        
         # inconclusive from API if query or body
-        return self.call_api(f"registry/records/{recordId}/aspects/{aspectID}",self.PATCH, body=aspectDataDict,**kwargs)
+        return self.call_api(f"records/{recordId}/aspects/{aspectID}",self.PATCH, body=aspectDataDict,**kwargs)
     
     def recordAspectPATCHMultiple(self,aspectID,aspectAndRecordIdDataDict,**kwargs):        
         # inconclusive from API if query or body
-        return self.call_api(f"registry/records/aspects/{aspectID}",self.PATCH, body=aspectAndRecordIdDataDict,**kwargs)
+        return self.call_api(f"records/aspects/{aspectID}",self.PATCH, body=aspectAndRecordIdDataDict,**kwargs)
     
         
     def recordAspectPut(self,recordId,aspectID,aspectDataDict,**kwargs):        
-        return self.call_api(f"registry/records/{recordId}/aspects/{aspectID}",self.PUT, body=aspectDataDict,**kwargs)
+        return self.call_api(f"records/{recordId}/aspects/{aspectID}",self.PUT, body=aspectDataDict,**kwargs)
         
 
     def recordAspectGetAll(self,recordId,**kwargs):        
-        return self.call_api(f"registry/records/{recordId}/aspects",self.GET,**kwargs)  
+        return self.call_api(f"records/{recordId}/aspects",self.GET,**kwargs)  
     
     def recordAspectGetByAspect(self,aspectlist,**kwargs):        
-        return self.call_api(f"registry/records",self.GET,query_params={"aspect":aspectlist},**kwargs)  
+        return self.call_api(f"records",self.GET,query_params={"aspect":aspectlist},**kwargs)  
         
     def recordAspectGetCount(self,recordId,**kwargs):        
-        return self.call_api(f"registry/records/{recordId}/aspects/count",self.GET,**kwargs)        
+        return self.call_api(f"records/{recordId}/aspects/count",self.GET,**kwargs)        
 
 
     def recordGet(self,recordId,**kwargs):        
-        return self.call_api(f"registry/records/inFull/{recordId}",self.GET,**kwargs)
+        return self.call_api(f"records/inFull/{recordId}",self.GET,**kwargs)
         
     def recordGetPagetokens(self,**kwargs):        
-        return self.call_api(f"registry/records/pagetokens",self.GET,**kwargs)    
+        return self.call_api(f"records/pagetokens",self.GET,**kwargs)    
     
     def recordGetSummaries(self,**kwargs):        
-        return self.call_api(f"registry/records/summary",self.GET,**kwargs)#)    
+        return self.call_api(f"records/summary",self.GET,**kwargs)#)    
         
     def recordGetSummary(self,recordId,**kwargs):        
-        return self.call_api(f"registry/records/summary/{recordId}",self.GET,**kwargs)  
+        return self.call_api(f"records/summary/{recordId}",self.GET,**kwargs)  
         
         
     def recordCreate(self,recordsData,**kwargs):        
-        return self.call_api(f"registry/records",self.POST,  body=recordsData,**kwargs)
+        return self.call_api(f"records",self.POST,  body=recordsData,**kwargs)
         
         
     def recordPatch(self,recordId,recordsData,**kwargs):        
-        return self.call_api(f"registry/records/{recordId}",self.PATCH,body=recordsData,**kwargs)
+        return self.call_api(f"records/{recordId}",self.PATCH,body=recordsData,**kwargs)
         
     def recordPatchMultiple(self, recordsData,**kwargs):       
         '''
@@ -187,20 +197,22 @@ class AspectMagdaClient(ApiClient):
           "jsonPatch": "Unknown Type: object[]"
         }
         ''' 
-        return self.call_api(f"registry/records/",self.PATCH, body=recordsData,**kwargs)
+        return self.call_api(f"records/",self.PATCH, body=recordsData,**kwargs)
         
         
     def recordEdit(self,recordId,recordsData,**kwargs):        
-        self.call_api(f"registry/records/{recordId}",self.PUT,body=recordsData,**kwargs)
+        self.call_api(f"records/{recordId}",self.PUT,body=recordsData,**kwargs)
         
         
     def recordDelete(self,recordId,**kwargs):        
-        self.call_api(f"registry/records/{recordId}",self.DELETE,**kwargs)
+        self.call_api(f"records/{recordId}",self.DELETE,**kwargs)
         
         
     def testAuth(self,**kwargs):
-        return self.call_api(f"auth/users/whoami",self.GET,**kwargs)
+        if not self.__internal:
+            return self.call_api(f"auth/users/whoami",self.GET,**kwargs)
         
+        return "not available with jwt token authentication"
         
         
     def searchRecordByName(self,searchOrg, exact=True):
