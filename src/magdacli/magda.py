@@ -47,8 +47,9 @@ class AspectMagdaClient(ApiClient):
             if "jwt-token" in apiprops:
                 AspectMagdaClient.__instance = AspectMagdaClient(os.path.expandvars(apiprops["jwt-token"]),
                                                                  os.path.expandvars(apiprops.get("user-id","00000000-0000-4000-8000-000000000000")),
+                                                                 apiprops["url"],
                                                                  tenantId = apiprops.get("tenant-id",'0'),
-                                                                 apiprops["url"],asjwt= True)
+                                                                 asjwt= True)
                 
                 
             else:
