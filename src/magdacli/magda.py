@@ -14,7 +14,7 @@ Magda client, build ontop of the generic APIClient
 from pyrest.rest import ApiClient
 from pyrest.configuration import Configuration
 
-import os, jwt
+import os, jwt , sys
 from urllib.parse import urlparse
 
 class AspectMagdaClient(ApiClient):
@@ -61,8 +61,8 @@ class AspectMagdaClient(ApiClient):
         
         self.configuration = Configuration()
         if asjwt:
-            api_prefix =AspectMagdaClient.internal_prefix
-            self.configuration.auth_settings_map[AspectMagdaClient.api_auth_id_name] = {'in':"header","key":AspectMagdaClient.api_jwt_id,
+            api_prefix = AspectMagdaClient.internal_prefix
+            self.configuration.auth_settings_map[AspectMagdaClient.api_jwt_id] = {'in':"header","key":AspectMagdaClient.api_jwt_id,
                                                                                         "value":self._createToken(authid,authtoken)}
         
         else:
@@ -103,7 +103,7 @@ class AspectMagdaClient(ApiClient):
         # if _raise_error is true this will be ignored
         # _return_http_data_only is ignored for downstream but used here to identify if we want errors returned
         if not self.replyOK( result[1] ):
-            print(result[0])
+            print(result[0], file=sys.stderr, flush=True)
             if not _return_http_data_only:
                 return result
             return None
