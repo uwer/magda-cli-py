@@ -46,7 +46,7 @@ class AspectMagdaClient(ApiClient):
             ## this is crude and this wants to come from a better place then an function argument 
             if "jwt-token" in apiprops:
                 AspectMagdaClient.__instance = AspectMagdaClient(os.path.expandvars(apiprops["jwt-token"]),
-                                                                 os.path.expandvars(apiprops.get("user-id","00000000-0000-4000-8000-000000000000")),
+                                                                 os.path.expandvars(apiprops.get("user-id","")),
                                                                  apiprops["url"],
                                                                  tenantId = apiprops.get("tenant-id",'0'),
                                                                  asjwt= True)
@@ -242,6 +242,9 @@ class AspectMagdaClient(ApiClient):
         return None
     
     
+    def encode(self, context,key):
+        return encodeKey(context, key)
+    
     
 class ManagementMagdaClient(ApiClient):
     '''
@@ -369,7 +372,8 @@ class ManagementMagdaClient(ApiClient):
     def connectorCreate(self, data, **kwargs):
         return self.call_api(f"admin/connectors/",self.POST, body=data,**kwargs)
     
-    
+    def encode(self, context,key):
+        return encodeKey(context, key)
         
     
     
