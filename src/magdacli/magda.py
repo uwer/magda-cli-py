@@ -202,11 +202,11 @@ class AspectMagdaClient(ApiClient):
         
         
     def recordEdit(self,recordId,recordsData,**kwargs):        
-        self.call_api(f"records/{recordId}",self.PUT,body=recordsData,**kwargs)
+        return self.call_api(f"records/{recordId}",self.PUT,body=recordsData,**kwargs)
         
         
     def recordDelete(self,recordId,**kwargs):        
-        self.call_api(f"records/{recordId}",self.DELETE,**kwargs)
+        return self.call_api(f"records/{recordId}",self.DELETE,**kwargs)
         
         
     def testAuth(self,**kwargs):
@@ -277,7 +277,7 @@ class ManagementMagdaClient(ApiClient):
     # or Bearer [API Key ID]:[API key]
     def __init__(self,authtoken, authid, url):
         
-        self._baseUrl = "{}{}".format(url,AspectMagdaClient.api_prefix)
+        self._baseUrl = "{}{}".format(url,ManagementMagdaClient.api_prefix)
         self.configuration = Configuration()
         self.configuration.auth_settings_map[ManagementMagdaClient.api_auth_id_name] = {'in':"header","key":ManagementMagdaClient.api_auth_id_name,"value":authid}
         self.configuration.auth_settings_map[ManagementMagdaClient.api_auth_key_name] = {'in':"header","key":ManagementMagdaClient.api_auth_key_name,"value":authtoken}
@@ -331,7 +331,7 @@ class ManagementMagdaClient(ApiClient):
     def orgFromTo(self, lowerNodeId,higherNodeId, **kwargs):
         return self.call_api(f"auth/orgunits/:{higherNodeId}/topDownPathTo/:{lowerNodeId}",self.GET,**kwargs)
         
-    def orgImmediateCHildren(self, nodeId ,**kwargs):
+    def orgImmediateChildren(self, nodeId ,**kwargs):
         return self.call_api(f"auth/orgunits/{nodeId}/children/immediate",self.GET,**kwargs)
         
     def orgRoot(self ,**kwargs):
@@ -341,7 +341,7 @@ class ManagementMagdaClient(ApiClient):
         return self.call_api(f"auth/orgunits/bylevel/{orgLevel}",self.GET,**kwargs)
     
     def orgUpdate(self, nodeId,data ,**kwargs):
-        return self.call_api(f"auth/orgunits/:nodeId",self.PUT, body=data,**kwargs)
+        return self.call_api(f"auth/orgunits/:{nodeId}",self.PUT, body=data,**kwargs)
 
     
     def resourceGet(self,rid, **kwargs):
