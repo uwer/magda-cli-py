@@ -256,6 +256,7 @@ class ManagementMagdaClient(ApiClient):
     api_prefix = "/api/v0/"
     api_auth_key_name = "X-Magda-API-Key"
     api_auth_id_name = "X-Magda-API-Key-Id"
+    api_jwt_id = "X-Magda-Session"
     
     __instance = None
     
@@ -269,18 +270,25 @@ class ManagementMagdaClient(ApiClient):
         '''
         if ManagementMagdaClient.__instance == None:
             ## this is crude and this wants to come from a better place then an function argument 
-            ManagementMagdaClient.__instance = ManagementMagdaClient(apiprops["api-key"],apiprops["api-key-id"],apiprops["url"])
+            ManagementMagdaClient.__instance = ManagementMagdaClient(**{"url":apiprops["url"],
+                                                                        "authtoken":apiprops.get("api-key",None),
+                                                                        "authid":apiprops.get("api-key-id",None),
+                                                                        "jwtoken":apiprops.get("jwtoken",None)})
         
         
         return ManagementMagdaClient.__instance
     
     # or Bearer [API Key ID]:[API key]
-    def __init__(self,authtoken, authid, url):
+    def __init__(self,url,authtoken= None, authid= None, jwtoken= None):
         
         self._baseUrl = "{}{}".format(url,ManagementMagdaClient.api_prefix)
         self.configuration = Configuration()
-        self.configuration.auth_settings_map[ManagementMagdaClient.api_auth_id_name] = {'in':"header","key":ManagementMagdaClient.api_auth_id_name,"value":authid}
-        self.configuration.auth_settings_map[ManagementMagdaClient.api_auth_key_name] = {'in':"header","key":ManagementMagdaClient.api_auth_key_name,"value":authtoken}
+        if authtoken and authid:
+            self.configuration.auth_settings_map[ManagementMagdaClient.api_auth_id_name] = {'in':"header","key":ManagementMagdaClient.api_auth_id_name,"value":authid}
+            self.configuration.auth_settings_map[ManagementMagdaClient.api_auth_key_name] = {'in':"header","key":ManagementMagdaClient.api_auth_key_name,"value":authtoken}
+        elif jwtoken:
+            self.configuration.auth_settings_map[ManagementMagdaClient.api_auth_key_name] = {'in':"header","key":ManagementMagdaClient.api_jwt_id,"value":jwtoken}
+        
         #configuration.api_key["X-Magda-API-Key-Id"] = authid
         #configuration.api_key["X-Magda-API-Key"] = authtoken
         self.configuration.host = self._baseUrl
@@ -376,7 +384,10 @@ class ManagementMagdaClient(ApiClient):
         return encodeKey(context, key)
         
     
+    def opa(self, path = '', jdata = None, query = None, headers = None, **kwargs):
+        return self.call_api(f"auth/opa/decision{path}", self.POST,body=jdata, query_params=query, **kwargs)
     
+        
 def encodeKey(context,key):
     cnxt = context.lower()
     if cnxt == 'entity':
@@ -406,6 +417,13 @@ def encodeKey(context,key):
 
     
     return key
+
+
+def encodeSession(session):
+    return {ManagementMagdaClient.api_jwt_id:session}
+
+def getSession(headers):
+    return headers.get(ManagementMagdaClient.api_jwt_id,None)
    
     
 def createRegistryClient(apiprops):
