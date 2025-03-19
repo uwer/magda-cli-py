@@ -253,7 +253,7 @@ class ManagementMagdaClient(ApiClient):
     Utilises simple REST API
     '''
     
-    api_prefix = "/api/v0/"
+    api_prefix = "/v0/"
     api_auth_key_name = "X-Magda-API-Key"
     api_auth_id_name = "X-Magda-API-Key-Id"
     api_jwt_id = "X-Magda-Session"
@@ -282,6 +282,7 @@ class ManagementMagdaClient(ApiClient):
     def __init__(self,url,authtoken= None, authid= None, jwtoken= None):
         
         self._baseUrl = "{}{}".format(url,ManagementMagdaClient.api_prefix)
+        
         self.configuration = Configuration()
         if authtoken and authid:
             self.configuration.auth_settings_map[ManagementMagdaClient.api_auth_id_name] = {'in':"header","key":ManagementMagdaClient.api_auth_id_name,"value":authid}
