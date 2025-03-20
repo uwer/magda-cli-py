@@ -262,6 +262,7 @@ class ManagementMagdaClient(ApiClient):
     api_auth_key_name = "X-Magda-API-Key"
     api_auth_id_name = "X-Magda-API-Key-Id"
     api_jwt_id = "X-Magda-Session"
+    api_tenant_id = "X-Magda-Tenant-Id"
     
     __instance = None
     
