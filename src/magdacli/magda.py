@@ -164,7 +164,9 @@ class AspectMagdaClient(ApiClient):
     def recordAspectGetAll(self,recordId,**kwargs):        
         return self.call_api(f"records/{recordId}/aspects",self.GET,**kwargs)  
     
-    def recordAspectGetByAspect(self,aspectlist,**kwargs):        
+    def recordAspectGetByAspect(self,aspectlist,**kwargs):  
+        if not isinstance(aspectlist,(tuple,list)):
+            aspectlist = [aspectlist]   
         return self.call_api(f"records",self.GET,query_params={"aspect":aspectlist},**kwargs)  
         
     def recordAspectGetCount(self,recordId,**kwargs):        
@@ -338,7 +340,7 @@ class ManagementMagdaClient(ApiClient):
         return self.call_api(f"auth/orgunits/{nodeId}/children/all",self.GET,**kwargs)
         
     def orgFromTo(self, lowerNodeId,higherNodeId, **kwargs):
-        return self.call_api(f"auth/orgunits/:{higherNodeId}/topDownPathTo/:{lowerNodeId}",self.GET,**kwargs)
+        return self.call_api(f"auth/orgunits/{higherNodeId}/topDownPathTo/{lowerNodeId}",self.GET,**kwargs)
         
     def orgImmediateChildren(self, nodeId ,**kwargs):
         return self.call_api(f"auth/orgunits/{nodeId}/children/immediate",self.GET,**kwargs)
@@ -350,7 +352,7 @@ class ManagementMagdaClient(ApiClient):
         return self.call_api(f"auth/orgunits/bylevel/{orgLevel}",self.GET,**kwargs)
     
     def orgUpdate(self, nodeId,data ,**kwargs):
-        return self.call_api(f"auth/orgunits/:{nodeId}",self.PUT, body=data,**kwargs)
+        return self.call_api(f"auth/orgunits/{nodeId}",self.PUT, body=data,**kwargs)
 
     
     def resourceGet(self,rid, **kwargs):
