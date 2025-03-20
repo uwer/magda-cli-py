@@ -286,11 +286,11 @@ class ManagementMagdaClient(ApiClient):
         self._baseUrl = "{}{}".format(url,ManagementMagdaClient.api_prefix)
         
         self.configuration = Configuration()
-        if authtoken and authid:
+        if jwtoken:
+            self.configuration.auth_settings_map[ManagementMagdaClient.api_auth_key_name] = {'in':"header","key":ManagementMagdaClient.api_jwt_id,"value":jwtoken}
+        elif authtoken and authid:
             self.configuration.auth_settings_map[ManagementMagdaClient.api_auth_id_name] = {'in':"header","key":ManagementMagdaClient.api_auth_id_name,"value":authid}
             self.configuration.auth_settings_map[ManagementMagdaClient.api_auth_key_name] = {'in':"header","key":ManagementMagdaClient.api_auth_key_name,"value":authtoken}
-        elif jwtoken:
-            self.configuration.auth_settings_map[ManagementMagdaClient.api_auth_key_name] = {'in':"header","key":ManagementMagdaClient.api_jwt_id,"value":jwtoken}
         
         #configuration.api_key["X-Magda-API-Key-Id"] = authid
         #configuration.api_key["X-Magda-API-Key"] = authtoken
