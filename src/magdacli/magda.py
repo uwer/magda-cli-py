@@ -17,6 +17,11 @@ from pyrest.configuration import Configuration
 import os, jwt , sys
 from urllib.parse import urlparse
 
+
+
+def _createToken(user, token):
+    return jwt.encode(payload={"userId": user},key=token)
+
 class AspectMagdaClient(ApiClient):
     '''
     simple Magda client just managing the records and aspects associated with records 
@@ -71,7 +76,7 @@ class AspectMagdaClient(ApiClient):
             self.__internal = True
             api_prefix = AspectMagdaClient.internal_prefix
             self.configuration.auth_settings_map[AspectMagdaClient.api_jwt_id] = {'in':"header","key":AspectMagdaClient.api_jwt_id,
-                                                                                        "value":self._createToken(authid,authtoken)}
+                                                                                        "value":_createToken(authid,authtoken)}
             self.configuration.auth_settings_map[AspectMagdaClient.api_tenant_id] = {'in':"header","key":AspectMagdaClient.api_tenant_id,
                                                                                          "value":tenantId}
         
@@ -120,8 +125,7 @@ class AspectMagdaClient(ApiClient):
             return None
         return  result[0]
         
-    def _createToken(self,user, token):
-        return jwt.encode(payload={"userId": user},key=token)
+
         
     
     def aspectCreate(self,aspectDict,**kwargs):        
@@ -251,7 +255,6 @@ class AspectMagdaClient(ApiClient):
 class ManagementMagdaClient(ApiClient):
     '''
     simple Magda client just managing the records and aspects associated with records 
-    
     Utilises simple REST API
     '''
     
@@ -271,33 +274,60 @@ class ManagementMagdaClient(ApiClient):
     
         '''
         if ManagementMagdaClient.__instance == None:
-            ## this is crude and this wants to come from a better place then an function argument 
-            ManagementMagdaClient.__instance = ManagementMagdaClient(**{"url":apiprops["url"],
-                                                                        "authtoken":apiprops.get("api-key",None),
-                                                                        "authid":apiprops.get("api-key-id",None),
-                                                                        "jwtoken":apiprops.get("jwtoken",None)})
-        
-        
+            if "jwt-token" in apiprops:
+                ManagementMagdaClient.__instance = ManagementMagdaClient(apiprops["url"],
+                                                                 os.path.expandvars(apiprops["jwt-token"]),
+                                                                 os.path.expandvars(apiprops.get("user-id","")),
+                                                                 tenantId = apiprops.get("tenant-id",'0'),
+                                                                 asjwt= True)
+                
+                
+            else:
+                ManagementMagdaClient.__instance = ManagementMagdaClient(apiprops["url"],
+                                                                         os.path.expandvars(apiprops["api-key"]),
+                                                                         os.path.expandvars(apiprops["api-key-id"]))
+            
         return ManagementMagdaClient.__instance
     
+    
+    
     # or Bearer [API Key ID]:[API key]
-    def __init__(self,url,authtoken= None, authid= None, jwtoken= None):
+    def __init__(self,url,authtoken= None, authid= None, tenantId = '0', asjwt = False):
         
-        self._baseUrl = "{}{}".format(url,ManagementMagdaClient.api_prefix)
+        
         
         self.configuration = Configuration()
+        
+        
+        if asjwt:
+            self.__internal = True
+            self.configuration.auth_settings_map[ManagementMagdaClient.api_jwt_id] = {'in':"header","key":ManagementMagdaClient.api_jwt_id,
+                                                                                        "value":_createToken(authid,authtoken)}
+            self.configuration.auth_settings_map[ManagementMagdaClient.api_tenant_id] = {'in':"header","key":ManagementMagdaClient.api_tenant_id,
+                                                                                         "value":tenantId}
+        
+        else:
+            self.__internal = False
+            self.configuration.auth_settings_map[ManagementMagdaClient.api_auth_id_name] = {'in':"header","key":ManagementMagdaClient.api_auth_id_name,
+                                                                                        "value":authid}
+            self.configuration.auth_settings_map[ManagementMagdaClient.api_auth_key_name] = {'in':"header","key":ManagementMagdaClient.api_auth_key_name,
+                                                                                         "value":authtoken}
+        self._baseUrl = "{}{}".format(url,ManagementMagdaClient.api_prefix)
+        
+        '''
+        
         if jwtoken:
             self.configuration.auth_settings_map[ManagementMagdaClient.api_auth_key_name] = {'in':"header","key":ManagementMagdaClient.api_jwt_id,"value":jwtoken}
         elif authtoken and authid:
             self.configuration.auth_settings_map[ManagementMagdaClient.api_auth_id_name] = {'in':"header","key":ManagementMagdaClient.api_auth_id_name,"value":authid}
             self.configuration.auth_settings_map[ManagementMagdaClient.api_auth_key_name] = {'in':"header","key":ManagementMagdaClient.api_auth_key_name,"value":authtoken}
-        
-        #configuration.api_key["X-Magda-API-Key-Id"] = authid
-        #configuration.api_key["X-Magda-API-Key"] = authtoken
+        '''
+
         self.configuration.host = self._baseUrl
         self.configuration.verify_ssl = False
         #'content-type': 'application/json; charset=utf-8'
-        ApiClient.__init__(self, self.configuration)# this is the default ,header_name='content-type', header_value='application/json; charset=utf-8')
+        # this is the default ,header_name='content-type', header_value='application/json; charset=utf-8')
+        ApiClient.__init__(self, self.configuration)
         
         '''
         --header 'Content-Type: application/json' \
@@ -309,6 +339,7 @@ class ManagementMagdaClient(ApiClient):
                  response_type=object, auth_settings=None, async_req=None,
                  _return_http_data_only=False, collection_formats=None,
                  _preload_content=True, _request_timeout=None, _raise_error= True):
+        # _raise_error true means that we will raise an error on any non 2xx status!!
         
         auth_settings=self.configuration.auth_settings_map.keys() if auth_settings is None else auth_settings
 
@@ -452,6 +483,7 @@ def createManagmentClient(apiprops):
     It supports multiple parallel requests 
     parameter - apiprops, dict with mandatory keys "api-key","api-key-id","url" 
                         for authentication "api-key","api-key-id"
+                        or a  jwt-token that take s precedence 
                         the rest base URL without path "url" 
     
     '''
