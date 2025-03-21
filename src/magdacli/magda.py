@@ -315,6 +315,8 @@ class ManagementMagdaClient(ApiClient):
                                                                                          "value":authtoken}
         self._baseUrl = "{}{}".format(url,ManagementMagdaClient.api_prefix)
         
+        self._authprefix = "public" if self.__internal else "auth"
+        
         '''
         
         if jwtoken:
@@ -359,43 +361,45 @@ class ManagementMagdaClient(ApiClient):
         
         
     def orgRootCreate(self, data ,**kwargs):
-        return self.call_api(f"auth/orgunits/root",self.POST, body=data,**kwargs)
+        return self.call_api(f"{self._authprefix}/orgunits/root",self.POST, body=data,**kwargs)
 
     def orgCreate(self, paid, data ,**kwargs):
-        return self.call_api(f"auth/orgunits/{paid}/insert",self.POST, body=data,**kwargs)
+        return self.call_api(f"{self._authprefix}/orgunits/{paid}/insert",self.POST, body=data,**kwargs)
 
         
     def orgGet(self, nodeId ,**kwargs):
-        return self.call_api(f"auth/orgunits/{nodeId}",self.GET,**kwargs)
+        return self.call_api(f"{self._authprefix}/orgunits/{nodeId}",self.GET,**kwargs)
         
     def orgAllChildren(self, nodeId ,**kwargs):
-        return self.call_api(f"auth/orgunits/{nodeId}/children/all",self.GET,**kwargs)
+        return self.call_api(f"{self._authprefix}/orgunits/{nodeId}/children/all",self.GET,**kwargs)
         
     def orgFromTo(self, lowerNodeId,higherNodeId, **kwargs):
-        return self.call_api(f"auth/orgunits/{higherNodeId}/topDownPathTo/{lowerNodeId}",self.GET,**kwargs)
+        return self.call_api(f"{self._authprefix}/orgunits/{higherNodeId}/topDownPathTo/{lowerNodeId}",self.GET,**kwargs)
         
     def orgImmediateChildren(self, nodeId ,**kwargs):
-        return self.call_api(f"auth/orgunits/{nodeId}/children/immediate",self.GET,**kwargs)
+        return self.call_api(f"{self._authprefix}/orgunits/{nodeId}/children/immediate",self.GET,**kwargs)
         
     def orgRoot(self ,**kwargs):
-        return self.call_api(f"auth/orgunits/root",self.GET,**kwargs)
+        return self.call_api(f"{self._authprefix}/orgunits/root",self.GET,**kwargs)
         
     def orgByLevel(self, orgLevel ,**kwargs):
-        return self.call_api(f"auth/orgunits/bylevel/{orgLevel}",self.GET,**kwargs)
+        return self.call_api(f"{self._authprefix}/orgunits/bylevel/{orgLevel}",self.GET,**kwargs)
     
     def orgUpdate(self, nodeId,data ,**kwargs):
-        return self.call_api(f"auth/orgunits/{nodeId}",self.PUT, body=data,**kwargs)
+        return self.call_api(f"{self._authprefix}/orgunits/{nodeId}",self.PUT, body=data,**kwargs)
 
     
     def resourceGet(self,rid, **kwargs):
-        return self.call_api(f"auth/resources/{rid}",self.GET,**kwargs)
+        return self.call_api(f"{self._authprefix}/resources/{rid}",self.GET,**kwargs)
     
     def resourceByURI(self,uri, **kwargs):
-        return self.call_api(f"auth/resources/byUri/{uri}",self.GET,**kwargs)
+        return self.call_api(f"{self._authprefix}/resources/byUri/{uri}",self.GET,**kwargs)
     
     def resourceQuery(self,querymap, **kwargs):
-        return self.call_api(f"auth/resources",self.GET,query_params=querymap, auth_settings=self.configuration.auth_settings_map.keys(),**kwargs)
+        return self.call_api(f"{self._authprefix}/resources",self.GET,query_params=querymap, auth_settings=self.configuration.auth_settings_map.keys(),**kwargs)
     
+    '''
+    This is no longer aacessible, use registry
     def resourceCreate(self, data, **kwargs):
         return self.call_api(f"admin/resources/", self.POST,body=data,**kwargs)
 
@@ -414,13 +418,13 @@ class ManagementMagdaClient(ApiClient):
     
     def connectorCreate(self, data, **kwargs):
         return self.call_api(f"admin/connectors/",self.POST, body=data,**kwargs)
-    
+    '''
     def encode(self, context,key):
         return encodeKey(context, key)
         
     
     def opa(self, path = '', jdata = None, query = None, headers = None, **kwargs):
-        return self.call_api(f"auth/opa/decision{path}", self.POST,body=jdata, query_params=query, **kwargs)
+        return self.call_api(f"opa/decision{path}", self.POST,body=jdata, query_params=query, **kwargs)
     
         
 def encodeKey(context,key):
