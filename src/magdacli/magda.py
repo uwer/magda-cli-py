@@ -424,6 +424,10 @@ class ManagementMagdaClient(ApiClient):
         
     
     def opa(self, path = '', jdata = None, query = None, headers = None, **kwargs):
+        if len(path) > 0:
+            if path[0] != '/':
+                path = '/'+path
+                
         return self.call_api(f"opa/decision{path}", self.POST,body=jdata, query_params=query, **kwargs)
     
         
