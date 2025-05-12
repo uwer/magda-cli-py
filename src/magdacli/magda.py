@@ -14,7 +14,7 @@ Magda client, build ontop of the generic APIClient
 from pyrest.rest import ApiClient
 from pyrest.configuration import Configuration
 
-import os, jwt , sys
+import os, jwt , sys, json
 from urllib.parse import urlparse
 
 
@@ -168,10 +168,21 @@ class AspectMagdaClient(ApiClient):
     def recordAspectGetAll(self,recordId,**kwargs):        
         return self.call_api(f"records/{recordId}/aspects",self.GET,**kwargs)  
     
+    
+    
     def recordAspectGetByAspect(self,aspectlist,**kwargs):  
         if not isinstance(aspectlist,(tuple,list)):
             aspectlist = [aspectlist]   
-        return self.call_api(f"records",self.GET,query_params={"aspect":aspectlist},**kwargs)  
+        res = self.call_api(f"records",self.GET,query_params={"aspect":aspectlist},**kwargs)  
+        records = None
+        if "records" in res:
+            records = res["records"]
+            while "hasMore" in res and res["hasMore"]:
+                npage = res["nextPageToken"]
+                res = self.call_api(f"records",self.GET,query_params={"aspect":aspectlist,"pageToken":npage},**kwargs)  
+                if "records" in res:
+                    records.extend(["records"])
+        return records
         
     def recordAspectGetCount(self,recordId,**kwargs):        
         return self.call_api(f"records/{recordId}/aspects/count",self.GET,**kwargs)        
@@ -398,6 +409,112 @@ class ManagementMagdaClient(ApiClient):
     def resourceQuery(self,querymap, **kwargs):
         return self.call_api(f"{self._authprefix}/resources",self.GET,query_params=querymap, auth_settings=self.configuration.auth_settings_map.keys(),**kwargs)
     
+    
+    def whoami(self ,**kwargs):
+        return self.call_api(f"{self._authprefix}/users/whoami",self.GET,**kwargs)
+    
+    
+    def userGet(self, userId ,**kwargs):
+        return self.call_api(f"{self._authprefix}/users/{userId}",self.GET,**kwargs)
+    
+    def userGetPermissions(self, userId ,**kwargs):
+        return self.call_api(f"{self._authprefix}/users/{userId}/permissions",self.GET,**kwargs)
+    
+        
+    def user4Role(self, roleId ,**kwargs):
+        return self.call_api(f"{self._authprefix}/roles/{roleId}/users",self.GET,**kwargs)
+    
+    
+    def userCount(self, nodeId ,**kwargs):
+        return self.call_api(f"{self._authprefix}/users/count",self.GET,**kwargs)
+    
+    '''
+    clarify  - seems odd
+    def userGetRoles(self, userId ,**kwargs):
+        return self.call_api(f"{self._authprefix}/users/{userId}/roles",self.GET,**kwargs)
+    
+    
+    def userAddRoles(self, userId,roleIds ,**kwargs):
+        return self.call_api(f"{self._authprefix}/users/{userId}/roles",self.POST,body=roleIds,**kwargs)  
+    '''
+    def roleAdd(self,name,description="" ,**kwargs):
+        return self.call_api(f"{self._authprefix}/roles",self.POST,body={"name":name,"description":description},**kwargs)  
+    
+    def roleUpdate(self,roleId, name,description="" ,**kwargs):
+        return self.call_api(f"{self._authprefix}/roles/{roleId}",self.PUT,body={"name":name,"description":description},**kwargs)
+        
+    
+    def roleDelete(self,roleId ,**kwargs):
+        return self.call_api(f"{self._authprefix}/roles/{roleId}", self.DELETE)
+    
+    
+    def roleGet(self,roleId ,**kwargs):
+        return self.call_api(f"{self._authprefix}/roles/{roleId}", self.GET,**kwargs)
+    
+    
+    def roleQuery(self ,query={},**kwargs):
+        return self.call_api(f"{self._authprefix}/roles", self.GET,query_params=query,**kwargs)
+    
+    def roleCount(self ,query={},**kwargs):
+        return self.call_api(f"{self._authprefix}/roles/count", self.GET,query_params=query,**kwargs)
+        
+    
+    def roleGetPermissions(self,roleId,query={},**kwargs):
+        return self.call_api(f"{self._authprefix}/roles/{roleId}/permissions", self.GET,query_params=query,**kwargs)
+      
+        
+    def permissionGet(self,permId,**kwargs):
+        return self.call_api(f"{self._authprefix}/permissions/{permId}", self.GET,**kwargs)
+        
+    def permissionCount(self ,query={},**kwargs):
+        return self.call_api(f"{self._authprefix}/permissions/count", self.GET,query_params=query,**kwargs)
+
+
+    def permission2Role(self,roleId,record):
+        '''
+        role example
+          "name": "a test permission",
+          "user_ownership_constraint": false,
+          "org_unit_ownership_constraint": true,
+          "pre_authorised_constraint" : false,
+          "allow_exemption": false,
+          "description": "a test permission",
+           "resourceUri": "object/dataset/draft",
+          "operationUris": ["object/dataset/draft/read", "object/dataset/draft/write"]
+          
+        '''
+        return self.call_api(f"{self._authprefix}/roles/{roleId}/permissions", self.POST,body=record)
+        
+    
+    def permissionDeleteRole(self,roleId,permId):
+        return self.call_api(f"{self._authprefix}/roles/{roleId}/permissions/{permId}", self.DELETE)
+    
+    def permissionEditRole(self,roleId,permId, record):
+        return self.call_api(f"{self._authprefix}/roles/{roleId}/permissions/{permId}", self.PUT,body=record)
+    
+    def roleCopy(self,roleId, newName):
+        role = self.roleGet(roleId)
+        newrole = self.roleAdd(newName, role["description"])
+        
+        permissions = self.roleGetPermissions(roleId)
+        for perm in permissions:
+            del perm["resource_id"]
+            del perm["id"]
+            del perm["create_by"]
+            del perm["create_time"]
+            del perm["edit_by"]
+            del perm["edit_time"]
+            
+            perm["operationUris"] = [op["uri"] for op in perm["operations"]]
+            perm["resourceUri"] = perm["resource_uri"]
+            del perm["operations"]
+            del perm["resource_uri"]
+            
+            self.permission2Role(newrole['id'], perm)
+            
+        permissions = self.roleGetPermissions(newrole['id'])
+        return {"role":newrole,"permissions":permissions}
+        
     '''
     This is no longer aacessible, use registry
     def resourceCreate(self, data, **kwargs):
@@ -462,11 +579,11 @@ def encodeKey(context,key):
     return key
 
 
-def encodeSession(session):
-    return {ManagementMagdaClient.api_jwt_id:session}
+def encodeSession(session,tenant_id=0):
+    return {ManagementMagdaClient.api_jwt_id:session,"X-Magda-Tenant-Id":tenant_id}
 
 def getSession(headers):
-    return headers.get(ManagementMagdaClient.api_jwt_id,None)
+    return headers.get(ManagementMagdaClient.api_jwt_id,None),headers.get(ManagementMagdaClient.api_tenant_id,0)
    
     
 def createRegistryClient(apiprops):
