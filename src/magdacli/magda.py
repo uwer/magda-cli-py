@@ -208,8 +208,10 @@ class AspectMagdaClient(ApiClient):
     def recordPatch(self,recordId,recordsData,**kwargs):        
         return self.call_api(f"records/{recordId}",self.PATCH,body=recordsData,**kwargs)
         
-    def recordPatchMultiple(self, recordsData,**kwargs):       
+    def recordPatchMultiple(self, recordsData,**kwargs):
+          
         '''
+        recordsData =
         {
           "recordIds": "Unknown Type: string[]",
           "jsonPatch": "Unknown Type: object[]"
@@ -440,6 +442,15 @@ class ManagementMagdaClient(ApiClient):
     def roleAdd(self,name,description="" ,**kwargs):
         return self.call_api(f"{self._authprefix}/roles",self.POST,body={"name":name,"description":description},**kwargs)  
     
+    
+    
+    def roleCreate(self,role, permissions,**kwargs):
+        newrole = self.roleAdd(role["name"],role.get("description",""),**kwargs)
+        for perm in permissions:
+            self.permission2Role(newrole['id'], perm)
+        
+        return newrole
+        
     def roleUpdate(self,roleId, name,description="" ,**kwargs):
         return self.call_api(f"{self._authprefix}/roles/{roleId}",self.PUT,body={"name":name,"description":description},**kwargs)
         
@@ -494,10 +505,15 @@ class ManagementMagdaClient(ApiClient):
     
     def roleCopy(self,roleId, newName):
         role = self.roleGet(roleId)
-        newrole = self.roleAdd(newName, role["description"])
+        #newrole = self.roleAdd(newName, role["description"])
+        newrole= {"name":newName,"description": role["description"]}
+        permissions = stripPermissions(self.roleGetPermissions(roleId))
         
-        permissions = self.roleGetPermissions(roleId)
+        newrole = self.roleCreate(newrole,permissions)
+        """
+        
         for perm in permissions:
+            '''
             del perm["resource_id"]
             del perm["id"]
             del perm["create_by"]
@@ -509,9 +525,10 @@ class ManagementMagdaClient(ApiClient):
             perm["resourceUri"] = perm["resource_uri"]
             del perm["operations"]
             del perm["resource_uri"]
-            
+            '''
             self.permission2Role(newrole['id'], perm)
-            
+
+        """
         permissions = self.roleGetPermissions(newrole['id'])
         return {"role":newrole,"permissions":permissions}
         
@@ -578,6 +595,26 @@ def encodeKey(context,key):
     
     return key
 
+
+def stripPermissions(permissions):
+    npermissions = []
+    for perm in permissions:
+        del perm["resource_id"]
+        del perm["id"]
+        del perm["create_by"]
+        del perm["create_time"]
+        del perm["edit_by"]
+        del perm["edit_time"]
+
+        perm["owner_id"] = None
+        perm["operationUris"] = [op["uri"] for op in perm["operations"]]
+        perm["resourceUri"] = perm["resource_uri"]
+        del perm["operations"]
+        del perm["resource_uri"]
+            
+        npermissions.append(perm)
+            
+    return npermissions
 
 def encodeSession(session,tenant_id=0):
     return {ManagementMagdaClient.api_jwt_id:session,"X-Magda-Tenant-Id":tenant_id}
