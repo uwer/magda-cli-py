@@ -119,7 +119,8 @@ class AspectMagdaClient(ApiClient):
         # if _raise_error is true this will be ignored
         # _return_http_data_only is ignored for downstream but used here to identify if we want errors returned
         if not self.replyOK( result[1] ):
-            print(result[0], file=sys.stderr, flush=True)
+            print(f"{resource_path}:{result[1]} - {result[0]}", file=sys.stderr, flush=True)
+            #print(result[0], file=sys.stderr, flush=True)
             if not _return_http_data_only:
                 return result
             return None
@@ -367,8 +368,9 @@ class ManagementMagdaClient(ApiClient):
                                   _preload_content, _request_timeout, _raise_error)
         
         # if _raise_error is true this will be ignored
-        if not 200 <= result[1] < 299 :
-            print(result[0])
+        #if not 200 <= result[1] < 299 :
+        if not self.replyOK( result[1] ):
+            print(f"{resource_path}:{result[1]} - {result[0]}", file=sys.stderr, flush=True)
             return None
         return  result[0]
         
