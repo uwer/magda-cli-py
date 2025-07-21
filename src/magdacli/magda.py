@@ -108,7 +108,19 @@ class AspectMagdaClient(ApiClient):
                  _return_http_data_only=True, collection_formats=None,
                  _preload_content=True, _request_timeout=None, _raise_error= False):
         
-        auth_settings=self.configuration.auth_settings_map.keys() if auth_settings is None else auth_settings
+        # to allow partial override 
+        if auth_settings is None:
+            authkeys = self.configuration.auth_settings_map.keys()
+            if not header_params is None:
+                auth_settings = []
+                
+                for k in authkeys:
+                    if not k in header_params:
+                        auth_settings.append(k)
+            else:
+                auth_settings = authkeys
+                
+        #auth_settings=self.configuration.auth_settings_map.keys() if auth_settings is None else auth_settings
         
         result = super().call_api(resource_path, method, 
                                   path_params, query_params, header_params, 
@@ -297,7 +309,7 @@ class ManagementMagdaClient(ApiClient):
                                                                  asjwt= True)
                 
                 
-            else:
+            elif "api-key" in apiprops:
                 ManagementMagdaClient.__instance = ManagementMagdaClient(apiprops["url"],
                                                                          os.path.expandvars(apiprops["api-key"]),
                                                                          os.path.expandvars(apiprops["api-key-id"]))
@@ -358,7 +370,20 @@ class ManagementMagdaClient(ApiClient):
                  _preload_content=True, _request_timeout=None, _raise_error= True):
         # _raise_error true means that we will raise an error on any non 2xx status!!
         
-        auth_settings=self.configuration.auth_settings_map.keys() if auth_settings is None else auth_settings
+        # to allow partial override
+        if auth_settings is None:
+            authkeys = self.configuration.auth_settings_map.keys()
+            if not header_params is None:
+                auth_settings = []
+                
+                for k in authkeys:
+                    if not k in header_params:
+                        auth_settings.append(k)
+            else:
+                auth_settings = authkeys
+                
+        #auth_settings=self.configuration.auth_settings_map.keys() if auth_settings is None else auth_settings
+        
 
         result = super().call_api(resource_path, method, 
                                   path_params, query_params, header_params, 
@@ -620,6 +645,12 @@ def stripPermissions(permissions):
 
 def encodeSession(session,tenant_id=0):
     return {ManagementMagdaClient.api_jwt_id:session,"X-Magda-Tenant-Id":tenant_id}
+
+'''
+def encodeAuthSettings(session,tenant_id=0):
+    return {ManagementMagdaClient.api_jwt_id:{"in":"header","key":ManagementMagdaClient.api_jwt_id,"value":session},
+            "X-Magda-Tenant-Id":{"key":"X-Magda-Tenant-Id","value":tenant_id}}
+'''         
 
 def getSession(headers):
     return headers.get(ManagementMagdaClient.api_jwt_id,None),headers.get(ManagementMagdaClient.api_tenant_id,0)
