@@ -14,10 +14,11 @@ Magda client, build ontop of the generic APIClient
 from pyrest.rest import ApiClient
 from pyrest.configuration import Configuration
 
-import os, jwt , sys, json,re
+import os, jwt , sys,re
 from urllib.parse import urlparse
 
-_is_illegal_header_value = re.compile(br'\n(?![ \t])|\r(?![ \t\n])').search
+_is_illegal_header_value = re.compile(r'\n(?![ \t])|\r(?![ \t\n])').search
+_is_illegal_header_value_bytes = re.compile(br'\n(?![ \t])|\r(?![ \t\n])').search
 
 
 def _createToken(user, token):
