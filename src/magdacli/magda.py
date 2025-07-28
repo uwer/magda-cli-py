@@ -14,9 +14,10 @@ Magda client, build ontop of the generic APIClient
 from pyrest.rest import ApiClient
 from pyrest.configuration import Configuration
 
-import os, jwt , sys, json
+import os, jwt , sys, json,re
 from urllib.parse import urlparse
 
+_is_illegal_header_value = re.compile(br'\n(?![ \t])|\r(?![ \t\n])').search
 
 
 def _createToken(user, token):
@@ -374,6 +375,7 @@ class ManagementMagdaClient(ApiClient):
         if auth_settings is None:
             authkeys = self.configuration.auth_settings_map.keys()
             if not header_params is None:
+                
                 auth_settings = []
                 
                 for k in authkeys:
@@ -644,7 +646,7 @@ def stripPermissions(permissions):
     return npermissions
 
 def encodeSession(session,tenant_id=0):
-    return {ManagementMagdaClient.api_jwt_id:session,"X-Magda-Tenant-Id":tenant_id}
+    return {ManagementMagdaClient.api_jwt_id:session,ManagementMagdaClient.api_tenant_id:tenant_id}
 
 '''
 def encodeAuthSettings(session,tenant_id=0):
@@ -653,8 +655,12 @@ def encodeAuthSettings(session,tenant_id=0):
 '''         
 
 def getSession(headers):
-    return headers.get(ManagementMagdaClient.api_jwt_id,None),headers.get(ManagementMagdaClient.api_tenant_id,0)
-   
+    args =  headers.get(ManagementMagdaClient.api_jwt_id,None),headers.get(ManagementMagdaClient.api_tenant_id,0)
+    for a in args:
+        if a is None or _is_illegal_header_value(a):
+            raise ValueError("Invalid session for Magda client!")
+    
+    return args
     
 def createRegistryClient(apiprops):
     '''
