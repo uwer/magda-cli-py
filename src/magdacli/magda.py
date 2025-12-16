@@ -663,6 +663,14 @@ def getSession(headers):
     
     return args
     
+def simplifyAspectList(aspectdata):
+    # the aspects are packed up into separate 'data' in a list, lift them up as key/dict 
+    aspects = {}
+    for aspectd in aspectdata:
+        aspects[aspectd["id"]] = aspectd["data"]
+        
+    return aspects
+
 def createRegistryClient(apiprops):
     '''
     This call creates a singelton, so its ok to call repeatedly
